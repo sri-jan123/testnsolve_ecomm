@@ -50,12 +50,13 @@ No Discount Applied (Less Than 10 Products):
 ## Tech Stack
 
 ### Frontend:
-React (Optional for dynamic UI)
+React 
+BootStrap
 
 ### Backend:
 Node.js
 Express.js
-MongoDB (or any other database for storing user data and cart information)
+MongoDB 
 
 ### Authentication:
 JWT (JSON Web Tokens) for user authentication and authorization.
