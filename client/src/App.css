@@ -1,0 +1,78 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair:ital,opsz,wght@0,5..1200,300..900;1,5..1200,300..900&family=Poppins:wght@700&display=swap');
+*{
+  margin:0;
+  padding:0;
+  box-sizing: border-box;
+}
+
+/* .poppins-light {
+  font-family: "Poppins", sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}
+
+.poppins-regular {
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+} */
+/* .poppins-bold {
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+} */
+ .navbar{
+  font-family: "Poppins", sans-serif;
+  font-size: 17px;
+  line-height: 25px;
+  box-shadow: 0px 8px 6px -6px gray;
+  border-bottom: solid gray !important;
+  --webkit-box-shadow:0px 8px 6px -6px gray;
+ }
+
+ .nav-link{
+   font-weight: 300 !important;
+ }
+
+ .active{
+  border-bottom: 2px solid black;
+ }
+ .navbar-brand{
+  font-weight: 700;
+  font-family: 'roboto',sans-serif;
+  letter-spacing: 3px;
+ }
+ .footer{
+  color: white;
+  margin: 0px;
+  padding: 25px;
+  background: #000000;
+  background: -webkit-linear-gradient(
+    to right,
+    #434343,
+    #000000
+  );
+  background: linear-gradient( to right,
+  #434343,
+  #000000);
+ }
+
+ .footer a{
+  text-decoration: none;
+  color: white;
+  padding: 10px;
+ }
+
+ .footer a:hover{
+  color: #ffebfa;
+  border-bottom: 1px solid #ffefba;
+ }
+
+ .register{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height:70vh;
+  flex-direction: column;
+ }
