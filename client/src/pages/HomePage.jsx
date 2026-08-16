@@ -22,7 +22,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await axios.get('http://localhost:4000/api/product/all');
+        const response = await axios.get('/api/product/all');
         if (response.status === 200) {
           setProducts(response.data.products); 
         } else {
@@ -46,7 +46,7 @@ const HomePage = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:4000/api/usercart/cart/add',
+        '/api/usercart/cart/add',
         {
           productId: productId,
           quantity: 1,  
@@ -73,7 +73,7 @@ const HomePage = () => {
   const increaseQuantity = async (productId) => {
     try {
       const response = await axios.post(
-        'http://localhost:4000/api/usercart/cart/add',
+        '/api/usercart/cart/add',
         {
           productId: productId,
           quantity: 1,

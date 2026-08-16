@@ -19,7 +19,6 @@ const connectDB=async()=>{
 }
 
 dotenv.config()
-require('dotenv').config();
 app.use(cors());
 app.use(express.json());
 app.use('/api/auth',authRoute)
@@ -28,7 +27,7 @@ app.use('/api/usercart',userCart)
 app.use(cookieParser());
 
 
-app.listen(process.env.PORT,()=>{
+app.listen(process.env.PORT,'0.0.0.0',()=>{
     connectDB()
     console.log(`server running on PORT ${process.env.PORT}`)
 })

@@ -16,7 +16,7 @@ const Dashboard = () => {
     if (!auth || !auth.token) return;
 
     try {
-      const response = await axios.get('http://localhost:4000/api/usercart/cart', {
+      const response = await axios.get('api/usercart/cart', {
         headers: { Authorization: auth?.token },
       });
 
@@ -44,7 +44,7 @@ const Dashboard = () => {
   const handleRemoveAllItems = async () => {
     try {
       const response = await axios.post(
-        'http://localhost:4000/api/usercart/cart/removeAll',
+        '/api/usercart/cart/removeAll',
         {},
         { headers: { Authorization: auth?.token } }
       );
@@ -64,7 +64,7 @@ const Dashboard = () => {
   const handleRemoveItem = async (productId) => {
     try {
       const response = await axios.post(
-        'http://localhost:4000/api/usercart/cart/remove',
+        '/api/usercart/cart/remove',
         { productId },
         { headers: { Authorization: auth?.token } }
       );
@@ -85,7 +85,7 @@ const Dashboard = () => {
   const handleIncreaseQuantity = async (productId) => {
     try {
       const response = await axios.post(
-        'http://localhost:4000/api/usercart/cart/increase',
+        '/api/usercart/cart/increase',
         { productId },
         { headers: { Authorization: auth?.token } }
       );
@@ -104,7 +104,7 @@ const Dashboard = () => {
   const handleDecreaseQuantity = async (productId) => {
     try {
       const response = await axios.post(
-        'http://localhost:4000/api/usercart/cart/decrease',
+        '/api/usercart/cart/decrease',
         { productId },
         { headers: { Authorization: auth?.token } }
       );
