@@ -1,91 +1,118 @@
-resource "azurerm_subnet" "snetbackend" {
-  name                 = "backend"
+resource "azurerm_subnet" "snet1" {
+  name                 = "backend-snet"
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.2.0/24"]
 }
 
-resource "azurerm_public_ip" "lbpip" {
-  name                = "PublicIPForLB"
+# ============================================================
+# NAT GATEWAY PUBLIC IP
+# Used only for OUTBOUND internet access
+# ============================================================
+
+resource "azurerm_public_ip" "natpip" {
+  name                = "${var.prefix}-nat-pip"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   allocation_method   = "Static"
+  sku                 = "Standard"
 }
 
-resource "azurerm_lb" "backend_lb" {
-  name                = "TestLoadBalancer"
+# ============================================================
+# NAT GATEWAY
+# ============================================================
+
+resource "azurerm_nat_gateway" "backend_nat" {
+  name                = "${var.prefix}-backend-nat"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  sku_name            = "Standard"
+}
+
+# ============================================================
+# NAT GATEWAY → PUBLIC IP
+# ============================================================
+
+resource "azurerm_nat_gateway_public_ip_association" "backend_nat_assoc" {
+  nat_gateway_id       = azurerm_nat_gateway.backend_nat.id
+  public_ip_address_id = azurerm_public_ip.natpip.id
+}
+
+resource "azurerm_network_interface" "nic1" {
+  name                = "${var.prefix}-nic1"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
 
-  frontend_ip_configuration {
-    name                          = "backend-private-ip"
-    subnet_id                     = azurerm_subnet.snetbackend.id
+  ip_configuration {
+    name                          = "testconfiguration2"
+    subnet_id                     = azurerm_subnet.snet1.id
     private_ip_address_allocation = "Dynamic"
   }
 }
 
-#health probe
-resource "azurerm_lb_backend_address_pool" "backend_pool" {
-  name            = "backend-pool"
-  loadbalancer_id = azurerm_lb.backend_lb.id
-}
+resource "azurerm_virtual_machine" "backendvm" {
+  name                  = "${var.prefix}-vm-backend"
+  location              = azurerm_resource_group.rg.location
+  resource_group_name   = azurerm_resource_group.rg.name
+  network_interface_ids = [azurerm_network_interface.nic1.id]
+  vm_size               = "Standard_D2ads_v7"
 
-resource "azurerm_lb_probe" "backend_probe" {
-  name            = "backend-health-probe"
-  loadbalancer_id = azurerm_lb.backend_lb.id
-  protocol        = "Tcp"
-  port            = 4000
-}
+  # Uncomment this line to delete the OS disk automatically when deleting the VM
+  # delete_os_disk_on_termination = true
 
-resource "azurerm_lb_rule" "backend_rule" {
-  name                           = "backend-rule"
-  loadbalancer_id                = azurerm_lb.backend_lb.id
-  protocol                       = "Tcp"
-  frontend_port                  = 5173
-  backend_port                   = 4000
-  frontend_ip_configuration_name = "backend-private-ip"
-  backend_address_pool_ids       = [
-    azurerm_lb_backend_address_pool.backend_pool.id
-  ]
-  probe_id = azurerm_lb_probe.backend_probe.id
-}
+  # Uncomment this line to delete the data disks automatically when deleting the VM
+  # delete_data_disks_on_termination = true
 
-resource "azurerm_linux_virtual_machine_scale_set" "backendvmss" {
-  name                = "${var.prefix}-backend-vmss"
-  resource_group_name = azurerm_resource_group.rg.name
-  location            = azurerm_resource_group.rg.location
-  sku                 = "Standard_D2ads_v7"
-  instances           = 1
-  admin_username      = "adminuser"
-
-admin_ssh_key {
-    username   = "adminuser"
-    public_key = file("C:/Users/srija/.ssh/bastion_test.pub")
-  }
-
-source_image_reference {
+  storage_image_reference {
     publisher = "Canonical"
     offer     = "ubuntu-24_04-lts"
     sku       = "server"
     version   = "latest"
   }
-
-os_disk {
-    storage_account_type = "Standard_LRS"
-    caching              = "ReadWrite"
+  storage_os_disk {
+    name              = "myosdisk2"
+    caching           = "ReadWrite"
+    create_option     = "FromImage"
+    managed_disk_type = "Standard_LRS"
   }
-
-  network_interface {
-    name    = "backendnic"
-    primary = true
-
-    ip_configuration {
-      name      = "internal"
-      primary   = true
-      subnet_id = azurerm_subnet.snetbackend.id
-      load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.backend_pool.id]
-    }
+  os_profile {
+    computer_name  = "hostname"
+    admin_username = var.vm_username
+    admin_password = var.vm_password
+  }
+  os_profile_linux_config {
+    disable_password_authentication = false
   }
 }
 
+resource "azurerm_network_security_group" "nsg1" {
+  name                = "acceptanceTestSecurityGroup2"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
 
+  security_rule {
+    name                       = "httprule1"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "80"
+    source_address_prefix      = "10.0.1.0/24"
+    destination_address_prefix = "*"
+  }
+}
+
+resource "azurerm_subnet_network_security_group_association" "backend" {
+  subnet_id                 = azurerm_subnet.snet1.id
+  network_security_group_id = azurerm_network_security_group.nsg1.id
+}
+# ============================================================
+# NAT GATEWAY → BACKEND SUBNET
+# Provides outbound internet access to backend VM
+# ============================================================
+
+resource "azurerm_subnet_nat_gateway_association" "backend_nat_subnet" {
+  subnet_id      = azurerm_subnet.snet1.id
+  nat_gateway_id = azurerm_nat_gateway.backend_nat.id
+}
